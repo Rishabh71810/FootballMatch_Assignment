@@ -14,10 +14,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 // Football Data API configuration
-const API_BASE_URL = '';
+const API_BASE_URL = 'http://api.football-data.org/v4';
 const API_HEADERS = {
     'X-Unfold-Goals': 'true',
-    'X-Auth-Token': ''
+    'X-Auth-Token': '5045686994e5422186bd5abd21b84cd6'
 };
 
 // Cache to prevent too many API calls
