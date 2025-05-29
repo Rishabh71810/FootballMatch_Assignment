@@ -1,0 +1,26 @@
+{
+  "name": "upcoming-matches",
+  "version": "1.0.0",
+  "description": "A web application to display upcoming football matches using React and Node.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon server.js",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "install-client": "cd client && npm install"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.6.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "concurrently": "^7.6.0"
+  },
+  "keywords": ["football", "matches", "api", "react", "tailwind"],
+  "author": "",
+  "license": "MIT"
+} 
