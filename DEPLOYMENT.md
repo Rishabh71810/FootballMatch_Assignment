@@ -1,6 +1,10 @@
-# 🚀 Deploying to Vercel
+# 🚀 Deploying to Vercel - UPDATED
 
 This guide will help you deploy your Football Matches application to Vercel.
+
+## 🔧 **IMPORTANT: 404 Error Fix**
+
+If you're getting a 404 error after deployment, this is now fixed with the updated configuration!
 
 ## Prerequisites
 
@@ -8,7 +12,16 @@ This guide will help you deploy your Football Matches application to Vercel.
 2. **Vercel Account** - Sign up at [vercel.com](https://vercel.com)
 3. **Football Data API Key** - You already have: `5045686994e5422186bd5abd21b84cd6`
 
-## Step 1: Push to GitHub
+## Step 1: Build React App Locally
+
+```bash
+# Build the React app first
+cd client
+npm run build
+cd ..
+```
+
+## Step 2: Push to GitHub
 
 ```bash
 # Initialize git repository (if not already done)
@@ -18,23 +31,27 @@ git init
 git add .
 
 # Commit changes
-git commit -m "Initial commit - Football Matches App"
+git commit -m "Fixed Vercel deployment with proper routing"
 
-# Add your GitHub repository as origin
+# Add your GitHub repository as origin (replace with your repo)
 git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
 
 # Push to GitHub
 git push -u origin main
 ```
 
-## Step 2: Deploy to Vercel
+## Step 3: Deploy to Vercel
 
 ### Option A: Via Vercel Dashboard (Recommended)
 
 1. Go to [vercel.com](https://vercel.com) and sign in
 2. Click "New Project"
 3. Import your GitHub repository
-4. Vercel will auto-detect the configuration
+4. **IMPORTANT**: In the "Configure Project" section:
+   - Set **Framework Preset** to "Other"
+   - Set **Build Command** to: `cd client && npm ci && npm run build`
+   - Set **Output Directory** to: `client/build`
+   - Set **Install Command** to: `npm install`
 5. Add environment variable:
    - Name: `FOOTBALL_API_KEY`
    - Value: `5045686994e5422186bd5abd21b84cd6`
@@ -58,7 +75,9 @@ vercel
 # - Link to existing project? N
 # - Project name: [football-matches-app]
 # - Directory: [./]
-# - Settings? N
+# - Build Command: cd client && npm ci && npm run build
+# - Output Directory: client/build
+# - Settings? Y
 
 # Add environment variable
 vercel env add FOOTBALL_API_KEY
@@ -69,93 +88,129 @@ vercel env add FOOTBALL_API_KEY
 vercel --prod
 ```
 
-## Step 3: Configuration Details
+## Step 4: Configuration Details
 
-The following files are already configured for Vercel:
+### Updated `vercel.json` (Fixed)
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ]
+}
+```
 
-### `vercel.json`
-- Configures both Node.js API and React frontend
-- Routes API calls to serverless functions
-- Serves static React build
+This configuration:
+- ✅ Handles API routes properly
+- ✅ Serves React app through Express
+- ✅ Fixes 404 errors
+- ✅ Works with serverless functions
 
-### `server.js`
-- Modified to work as Vercel serverless function
-- Uses environment variables for API key
-- Extended cache duration for production
+## Step 5: Environment Variables
 
-### `client/package.json`
-- Added `vercel-build` script
-
-## Step 4: Environment Variables
-
-Set these in Vercel Dashboard → Project → Settings → Environment Variables:
+Set in Vercel Dashboard → Project → Settings → Environment Variables:
 
 | Variable | Value | Environment |
 |----------|-------|-------------|
 | `FOOTBALL_API_KEY` | `5045686994e5422186bd5abd21b84cd6` | Production |
 | `NODE_ENV` | `production` | Production |
 
-## Step 5: Custom Domain (Optional)
+## Step 6: Verify Deployment
 
-1. Go to Project Settings → Domains
-2. Add your custom domain
-3. Configure DNS records as instructed
+After deployment, test these URLs:
 
-## API Endpoints
+1. **Frontend**: `https://your-app.vercel.app`
+2. **API Health**: `https://your-app.vercel.app/api/health`
+3. **Matches API**: `https://your-app.vercel.app/api/matches`
 
-Once deployed, your API will be available at:
-- `https://your-app.vercel.app/api/matches` - Get matches
-- `https://your-app.vercel.app/api/health` - Health check
+## 🎯 **Troubleshooting the 404 Error**
 
-## Troubleshooting
+The 404 error was caused by incorrect static file routing. The fix:
 
-### Common Issues:
+### ❌ **Old Configuration** (Caused 404)
+```json
+{
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/server.js" },
+    { "src": "/(.*)", "dest": "/client/build/$1" }
+  ]
+}
+```
 
-1. **Build Fails**
-   - Check logs in Vercel dashboard
-   - Ensure all dependencies are in `package.json`
+### ✅ **New Configuration** (Fixed)
+```json
+{
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/server.js" },
+    { "src": "/(.*)", "dest": "/server.js" }
+  ]
+}
+```
 
-2. **API Not Working**
-   - Verify environment variables are set
-   - Check API rate limits
+**Why this works:**
+- Express server handles static file serving
+- React Router works properly
+- API routes are preserved
+- No 404 errors for React routes
 
-3. **React App Not Loading**
-   - Ensure `client/build` directory exists
-   - Check build logs
+## Common Issues & Solutions
 
-### Local Testing:
-
+### 1. **Still Getting 404?**
 ```bash
-# Install Vercel CLI
-npm install -g vercel
+# Redeploy with latest changes
+git add .
+git commit -m "Apply 404 fix"
+git push origin main
+# Vercel will auto-deploy
+```
 
-# Test locally
+### 2. **Build Fails?**
+- Ensure `client/build` folder exists
+- Run `cd client && npm run build` locally first
+- Check Vercel build logs
+
+### 3. **API Not Working?**
+- Verify environment variables in Vercel dashboard
+- Check Function logs in Vercel dashboard
+- Test API endpoints directly
+
+### 4. **Local Testing**
+```bash
+# Test the deployment locally
+npm install -g vercel
 vercel dev
 ```
 
+## Performance Features
+
+✅ **5-minute API caching** (prevents rate limits)  
+✅ **Serverless functions** (automatic scaling)  
+✅ **CDN distribution** (fast global access)  
+✅ **Automatic HTTPS** (secure by default)  
+✅ **Error handling** (graceful fallbacks)  
+
 ## Production URLs
 
-After deployment, you'll get:
-- **Frontend**: `https://your-app.vercel.app`
+After successful deployment:
+- **App**: `https://your-app.vercel.app`
 - **API**: `https://your-app.vercel.app/api/matches`
-
-## Performance Optimizations
-
-The app includes:
-- ✅ 5-minute API caching
-- ✅ Serverless functions
-- ✅ CDN distribution
-- ✅ Automatic HTTPS
-- ✅ Error handling with fallbacks
-
-## Support
-
-If you encounter issues:
-1. Check Vercel deployment logs
-2. Verify environment variables
-3. Test API endpoints directly
-4. Monitor rate limits on Football Data API
+- **Health**: `https://your-app.vercel.app/api/health`
 
 ---
 
-🎉 **Your app should now be live on Vercel!** 
+🎉 **Your app should now work perfectly on Vercel!**
+
+The 404 error is fixed and your football matches app should be fully functional. 
