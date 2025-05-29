@@ -17,13 +17,13 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 const API_BASE_URL = 'http://api.football-data.org/v4';
 const API_HEADERS = {
     'X-Unfold-Goals': 'true',
-    'X-Auth-Token': '5045686994e5422186bd5abd21b84cd6'
+    'X-Auth-Token': process.env.FOOTBALL_API_KEY || '5045686994e5422186bd5abd21b84cd6'
 };
 
 // Cache to prevent too many API calls
 let matchesCache = null;
 let cacheTimestamp = null;
-const CACHE_DURATION = 60000; // 1 minute cache
+const CACHE_DURATION = 300000; // 5 minutes cache for production
 
 // Helper function to check if cache is valid
 const isCacheValid = () => {
@@ -161,11 +161,26 @@ app.get('/api/matches/current', async (req, res) => {
     }
 });
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 // Serve React app for all other routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-}); 
+// Export for Vercel
+module.exports = app;
+
+// Start server only in development
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+} 
